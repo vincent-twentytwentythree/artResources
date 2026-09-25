@@ -1,0 +1,33 @@
+# 依赖
+node_modules/
+.pnp/
+vendor/
+
+# 构建产物
+dist/
+build/
+out/
+*.log
+
+# 环境变量与密钥
+.env
+.env.*
+!.env.example
+
+# 操作系统 / 编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# 临时文件
+*.tmp
+tmp/
+.claude/
+.codex/
+CLAUDE.md
+*.meta
+log/
+test/log/
+*.pyc
