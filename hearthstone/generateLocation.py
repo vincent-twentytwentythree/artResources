@@ -1,6 +1,4 @@
-buttonsForHomePage = {
-    "diveButton": (1280, 773),
-}
+
 
 # Pixel centers in template/rawpage.png (2560 x 1600).
 # Cards are numbered left to right, top row before bottom row.
@@ -14,8 +12,13 @@ cardPageLocations = {
     "card7": (1170, 1075),
     "card8": (1515, 1075),
     "emptyRightTop": (1740, 250),
+    "emptyMiddleTop": (1217, 120),
+    "emptyCard2Top": (825, 250),
     "emptyRightMiddle": (1740, 840),
-    "cardDetails": (1235, 600)
+    "cardDetails": (1217, 586),
+    "cardName": (1217,623),
+    "cardName2": (1217, 677),
+    "cardName3": (1217, 888)
 }
 
 def getAllRelatePos(buttonName, location):
@@ -29,13 +32,9 @@ def getAllRelatePos(buttonName, location):
     print(buttonName, record_pos)
     return record_pos
 
-
-buttonsForHomePageRelatePos = {
-    name: getAllRelatePos(name, pos)
-    for name, pos in buttonsForHomePage.items()
-}
-
 cardPageRelatePos = {
     name: getAllRelatePos(name, pos)
     for name, pos in cardPageLocations.items()
 }
+
+print (cardPageRelatePos)

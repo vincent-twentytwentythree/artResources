@@ -2,7 +2,8 @@
 node_modules/
 .pnp/
 vendor/
-
+data/
+debug/
 # 构建产物
 dist/
 build/

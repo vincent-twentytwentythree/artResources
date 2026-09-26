@@ -1,7 +1,9 @@
 import os
 import time
+import cv2
 from typing import Optional, Tuple, Type, Callable, Union, List
 import threading
+from pathlib import Path
 
 from airtest.core.api import *
 from airtest import aircv
@@ -17,6 +19,7 @@ from zafkiel.device.template import ImageTemplate as Template
 from zafkiel.logger import logger
 from zafkiel.exception import NotRunningError, ScriptError
 from zafkiel.ocr.ocr import Ocr
+from zafkiel.ocr.utils import corner2area, merge_buttons
 from zafkiel.timer import Timer
 from zafkiel.utils import random_rectangle_point
 
@@ -311,7 +314,6 @@ def move(pos: Union[Template, Tuple[int, int]]) -> Tuple[int, int]:
     G.DEVICE.mouse_move(pos)
     return pos
 
-
 def snapshot(v: Template, filename: str = None):
     """Capture a template area, optionally saving the cropped image."""
     screen = G.DEVICE.snapshot(filename=None, quality=Config.ST.SNAPSHOT_QUALITY)
@@ -322,3 +324,55 @@ def snapshot(v: Template, filename: str = None):
     if filename is not None:
         aircv.imwrite(filename, image, quality=Config.ST.SNAPSHOT_QUALITY)
     return image
+
+def ocr(v: Template, cls: Type[Ocr] = Ocr):
+    screen = G.DEVICE.snapshot(filename=None, quality=Config.ST.SNAPSHOT_QUALITY)
+    if screen is None:
+        logger.warning("Screen is None, may be locked")
+        return None
+    image = crop(screen, v.area)
+    reader = cls(v)
+    results = reader.detect_and_ocr(image, direct_ocr=True)
+    if results:
+        for result in results:
+            x1, y1, x2, y2 = result.box
+            result.box = (
+                x1 + v.area[0], y1 + v.area[1],
+                x2 + v.area[0], y2 + v.area[1],
+            )
+        return results
+
+    # Tight card-name crops can leave no room for the detector to form a box.
+    # Replicate edge pixels so the image keeps its background color.
+    for padding in (8, 16, 24):
+        padded = cv2.copyMakeBorder(
+            image, padding, padding, padding, padding, cv2.BORDER_REPLICATE
+        )
+        results = reader.detect_and_ocr(padded, direct_ocr=True)
+        if results:
+            offset_x, offset_y = v.area[0] - padding, v.area[1] - padding
+            for result in results:
+                x1, y1, x2, y2 = result.box
+                result.box = (
+                    x1 + offset_x, y1 + offset_y,
+                    x2 + offset_x, y2 + offset_y,
+                )
+            return results
+
+    # Retry detection at a lower box threshold when the tight crop was missed.
+    results = reader.model.detect_and_ocr(reader.pre_process(image), box_thresh=0.5)
+    for result in results:
+        x1, y1, x2, y2 = corner2area(result.box)
+        result.box = (
+            x1 + v.area[0], y1 + v.area[1],
+            x2 + v.area[0], y2 + v.area[1],
+        )
+    results = [result for result in results if reader.filter_detected(result)]
+    results = merge_buttons(results, thres_x=reader.merge_thres_x, thres_y=reader.merge_thres_y)
+    for result in results:
+        result.text = reader.after_process(result.text)
+    if results:
+        return results
+
+    aircv.imwrite(f"debug/ocr_{time.time_ns()}.png", image, quality=Config.ST.SNAPSHOT_QUALITY)
+    return []
