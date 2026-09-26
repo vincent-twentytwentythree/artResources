@@ -23,6 +23,20 @@ CARDS_PATH = Path(__file__).with_name("cards.json")
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
+def match_card_name(text: str, card_names: set[str]):
+    """Correct one misread character only when the card name is unambiguous."""
+    if text in card_names:
+        return text
+    if len(text) < 5:
+        return None
+    matches = [
+        name for name in card_names
+        if len(name) == len(text)
+        and sum(a != b for a, b in zip(name, text)) == 1
+    ]
+    return matches[0] if len(matches) == 1 else None
+
+
 class Generate(UI):
     def __init__(self, config: Config = None):
         self.config = config
@@ -67,7 +81,7 @@ class Generate(UI):
         while True:
             if loop_timer.reached():
                 raise LoopError('The operation has looped too many times')
-            default_boxed_results = set([card.text for card in ocr(cardName) or []])
+            default_boxed_results = set([card.text for card in ocr(cardName, single_line_fallback=True) or []])
             logger.info("defaul_boxed_results: {}", default_boxed_results)
 
             for index, card in enumerate(cards):
@@ -91,12 +105,13 @@ class Generate(UI):
                 for attempt in range(5):
                     time.sleep(0.1)
                     for cardNameBox in [cardName, cardName2, cardName3]:
-                        boxed_results = ocr(cardNameBox) or []
+                        boxed_results = ocr(cardNameBox, single_line_fallback=True) or []
                         for boxed_result in boxed_results:
                             text = boxed_result.text.strip()
                             logger.info(text)
-                            if text in card_names:
-                                matched_name = text
+                            known_name = match_card_name(text, card_names)
+                            if known_name is not None:
+                                matched_name = known_name
                                 break
                             if text not in default_boxed_results:
                                 matched_name = text

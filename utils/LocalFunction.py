@@ -20,6 +20,7 @@ from zafkiel.logger import logger
 from zafkiel.exception import NotRunningError, ScriptError
 from zafkiel.ocr.ocr import Ocr
 from zafkiel.ocr.utils import corner2area, merge_buttons
+from pponnxcr.predict_system import BoxedResult
 from zafkiel.timer import Timer
 from zafkiel.utils import random_rectangle_point
 
@@ -325,7 +326,7 @@ def snapshot(v: Template, filename: str = None):
         aircv.imwrite(filename, image, quality=Config.ST.SNAPSHOT_QUALITY)
     return image
 
-def ocr(v: Template, cls: Type[Ocr] = Ocr):
+def ocr(v: Template, cls: Type[Ocr] = Ocr, single_line_fallback: bool = False):
     screen = G.DEVICE.snapshot(filename=None, quality=Config.ST.SNAPSHOT_QUALITY)
     if screen is None:
         logger.warning("Screen is None, may be locked")
@@ -373,6 +374,14 @@ def ocr(v: Template, cls: Type[Ocr] = Ocr):
         result.text = reader.after_process(result.text)
     if results:
         return results
+
+    if single_line_fallback:
+        text_results, _ = reader.model.text_recognizer([reader.pre_process(image)])
+        if text_results:
+            text, score = text_results[0]
+            if text.strip() and score >= 0.5:
+                text = reader.after_process(text)
+                return [BoxedResult(v.area, image, text, score)]
 
     aircv.imwrite(f"debug/ocr_{time.time_ns()}.png", image, quality=Config.ST.SNAPSHOT_QUALITY)
     return []

@@ -7,7 +7,7 @@ import cv2
 from pponnxcr import TextSystem
 
 
-DEFAULT_IMAGE = Path(__file__).resolve().parent.parent / "ocr_1790428344561332200.png"
+DEFAULT_IMAGE = Path(__file__).resolve().parent.parent / "debug" / "ocr_1790452924208213500.png"
 
 def read_image(path: Path):
     image = cv2.imread(str(path))
