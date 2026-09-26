@@ -34,7 +34,7 @@ class Login(UI):
             firing_time=120,
             logdir=f"./log/{date}/report",
             devices=[
-                "MessageWindows:///?title_re=.*炉石传说.*",
+                "Windows:///?title_re=.*炉石传说.*",
             ],
         )
         logger.info("App started")

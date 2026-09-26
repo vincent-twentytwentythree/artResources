@@ -4,6 +4,7 @@ from typing import Optional, Tuple, Type, Callable, Union, List
 import threading
 
 from airtest.core.api import *
+from airtest import aircv
 from airtest.core.cv import try_log_screen
 from airtest.core.error import TargetNotFoundError
 from airtest.core.helper import G, logwrap, delay_after_operation, set_logdir
@@ -301,3 +302,23 @@ def loop_find(
             raise TargetNotFoundError(f'Picture {v.filepath} not found on screen')
         else:
             time.sleep(interval)
+
+def move(pos: Union[Template, Tuple[int, int]]) -> Tuple[int, int]:
+    """Move the mouse to a coordinate or the center of a template area."""
+    if isinstance(pos, Template):
+        x1, y1, x2, y2 = pos.area
+        pos = (round((x1 + x2) / 2), round((y1 + y2) / 2))
+    G.DEVICE.mouse_move(pos)
+    return pos
+
+
+def snapshot(v: Template, filename: str = None):
+    """Capture a template area, optionally saving the cropped image."""
+    screen = G.DEVICE.snapshot(filename=None, quality=Config.ST.SNAPSHOT_QUALITY)
+    if screen is None:
+        logger.warning("Screen is None, may be locked")
+        return None
+    image = crop(screen, v.area)
+    if filename is not None:
+        aircv.imwrite(filename, image, quality=Config.ST.SNAPSHOT_QUALITY)
+    return image
