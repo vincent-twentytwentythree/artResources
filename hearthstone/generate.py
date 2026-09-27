@@ -43,6 +43,11 @@ class Generate(UI):
         self.config = config
 
     def run(self):
+        if hasattr(G.DEVICE, "screen_capture_available") and not G.DEVICE.screen_capture_available():
+            raise RuntimeError(
+                "macOS Screen Recording permission is required for card OCR and PNG capture. "
+                "Allow the terminal running Python in System Settings > Privacy & Security > Screen Recording."
+            )
         config_data = self.config.config_data
         page_num = config_data.get("pageNum", 0)
         enableSkip = config_data.get("enableSkip", True)
@@ -85,7 +90,7 @@ class Generate(UI):
                 time.sleep(0.1)
                 move(position(emptyCard2Top))
                 time.sleep(0.1)
-                boxed_results = ocr(card1)
+                boxed_results = ocr(card1, ned_crop=False)
                 if boxed_results == None or len(boxed_results) == 0:
                     return True
                 for boxed_result in boxed_results:
@@ -138,6 +143,7 @@ class Generate(UI):
             default_boxed_results = set([card.text for card in ocr(card1, single_line_fallback=True) if card.text != None and len(card.text) >= 2 and card.text.isdigit() == False])
             logger.info("defaul_boxed_results: {}", default_boxed_results)
 
+            saved_count = 0
             for index, card in enumerate(cards):
                 logger.info("card {}", index)
                 if checkCard(card) == False:
@@ -161,16 +167,16 @@ class Generate(UI):
                 PAGE_DATA_DIR.mkdir(parents=True, exist_ok=True)
                 filename =  PAGE_DATA_DIR / f"{matched_name}_{index}.png"
                 logger.info(f"{page_num}_{index} new card {filename}")
-                try:
-                    image = snapshot(cardDetails, str(filename))
-                    if image is None:
+                if filename is not None and not filename.is_file():
+                    image = snapshot(cardDetails)
+                    aircv.imwrite(str(filename), image, quality=self.config.config_data.get("SNAPSHOT_QUALITY", 10))
+                    if image is None or not filename.is_file():
                         raise RuntimeError(f"Could not save card image: {filename}")
-                    if filename is not None and not filename.is_file():
-                        aircv.imwrite(filename, image, quality=Config.ST.SNAPSHOT_QUALITY)
-                except Exception as e:
-                    logger.info(e)
+                saved_count += 1
                 time.sleep(0.1)
                 touch(position(emptyCard2Top))
+            if saved_count == 0:
+                raise RuntimeError(f"No card PNGs saved for page {page_num}; page not advanced")
             time.sleep(0.1)
             touch(position(emptyRightMiddle))
             page_num += 1
@@ -189,13 +195,13 @@ if __name__ == "__main__":
     config = Config(CONFIG_PATH)
     login = Login(config)
     login.app_start()
-    retry = 10
-    while retry > 0:
-        retry -= 1
+    for attempt in range(10):
         try:
             Generate(config).run()
         except Exception as e:
             logger.error(e)
+            if config.config_data["debug"] or attempt == 9:
+                raise
             time.sleep(10)
         if config.config_data["debug"] == True:
             break

@@ -2,6 +2,7 @@ import os
 import time
 from typing import Optional, Tuple, Type, Callable, Union, List
 import threading
+import sys
 
 from airtest.core.api import *
 from airtest.core.cv import try_log_screen
@@ -9,7 +10,12 @@ from airtest.core.error import TargetNotFoundError
 from airtest.core.helper import G, logwrap, delay_after_operation, set_logdir
 from airtest.core.settings import Settings as ST
 from airtest.utils.compat import script_log_dir
-from pywinauto.findwindows import ElementNotFoundError
+if sys.platform == "win32":
+    from pywinauto.findwindows import ElementNotFoundError
+else:
+    # pywinauto's Win32 structures cannot be imported on other platforms.
+    class ElementNotFoundError(Exception):
+        pass
 
 from zafkiel.device.cv import loop_find
 from zafkiel.device.template import ImageTemplate as Template
@@ -32,7 +38,9 @@ def init_device(platform="Android", uuid=None, **kwargs):
         >>> init_device(platform="Android",uuid="SJE5T17B17", cap_method="JAVACAP")
         >>> init_device(platform="Windows",uuid="123456")
     """
-    if platform == "messagewindows":
+    if platform.lower() == "mac":
+        from utils.MacDesktop import MacDesktop as cls
+    elif platform.lower() == "messagewindows":
         from utils.MessageWindows import MessageWindows as cls
     else:
         cls = import_device_cls(platform)
@@ -156,6 +164,7 @@ def auto_setup(
                 raise NotRunningError(dev)
     if logdir:
         logdir = script_log_dir(basedir, logdir)
+        os.makedirs(logdir, exist_ok=True)
         set_logdir(logdir)
     if project_root:
         ST.PROJECT_ROOT = project_root

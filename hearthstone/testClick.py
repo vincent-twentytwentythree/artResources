@@ -33,6 +33,7 @@ def checkCard():
     touch(position(card1), right_click=True)
     time.sleep(0.1)
     touch(position(card1))
+    move(position(emptyCard2Top))
 
 if __name__ == "__main__":
     config = Config(CONFIG_PATH)

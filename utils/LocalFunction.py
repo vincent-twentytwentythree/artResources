@@ -12,7 +12,6 @@ from airtest.core.error import TargetNotFoundError
 from airtest.core.helper import G, logwrap, delay_after_operation, set_logdir
 from airtest.core.settings import Settings as ST
 from airtest.utils.compat import script_log_dir
-from pywinauto.findwindows import ElementNotFoundError
 
 # from zafkiel.device.cv import loop_find
 from zafkiel.device.template import ImageTemplate as Template
@@ -84,7 +83,8 @@ def touch(
         w = v.width * v.ratio()  # actual height and width of target in screen
         pos = random_rectangle_point(center_pos, h, w)
     else:
-        try_log_screen()
+        if getattr(G.DEVICE, "screen_capture_available", lambda: True)():
+            try_log_screen()
         pos = v
     for _ in range(times):
         G.DEVICE.touch(pos, **kwargs)
@@ -324,7 +324,7 @@ def snapshot(v: Template):
     image = crop(screen, v.area)
     return image
 
-def ocr(v: Template, cls: Type[Ocr] = Ocr, single_line_fallback: bool = False):
+def ocr(v: Template, cls: Type[Ocr] = Ocr, single_line_fallback: bool = False, need_crop: bool = True):
     screen = G.DEVICE.snapshot(filename=None, quality=Config.ST.SNAPSHOT_QUALITY)
     if screen is None:
         logger.warning("Screen is None, may be locked")
@@ -381,5 +381,6 @@ def ocr(v: Template, cls: Type[Ocr] = Ocr, single_line_fallback: bool = False):
                 text = reader.after_process(text)
                 return [BoxedResult(v.area, image, text, score)]
 
-    aircv.imwrite(f"debug/ocr_{time.time_ns()}.png", image, quality=Config.ST.SNAPSHOT_QUALITY)
+    if need_crop == True:
+        aircv.imwrite(f"debug/ocr_{time.time_ns()}.png", image, quality=Config.ST.SNAPSHOT_QUALITY)
     return []
