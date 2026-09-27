@@ -90,7 +90,7 @@ class Generate(UI):
                 time.sleep(0.1)
                 move(position(emptyCard2Top))
                 time.sleep(0.1)
-                boxed_results = ocr(card1, ned_crop=False)
+                boxed_results = ocr(card1, need_crop=False)
                 if boxed_results == None or len(boxed_results) == 0:
                     return True
                 for boxed_result in boxed_results:
