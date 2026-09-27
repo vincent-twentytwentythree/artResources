@@ -134,6 +134,7 @@ class Generate(UI):
                 time.sleep(0.1)
 
         loop_timer = Timer(0, 400).start()
+        previous_page_card1_name = None
         while True:
             if loop_timer.reached():
                 raise LoopError('The operation has looped too many times')
@@ -163,6 +164,11 @@ class Generate(UI):
                     continue
                     # raise RuntimeError(f"Card name not found in cards.json on page {page_num}, card {index}")
 
+                if index == 0 and previous_page_card1_name is not None and matched_name == previous_page_card1_name:
+                    logger.debug(f"{page_num}_{index} same as previous page card1 name")
+                    break
+                if index == 0:
+                    previous_page_card1_name = matched_name
                 PAGE_DATA_DIR = DATA_DIR / f"{page_num}"
                 PAGE_DATA_DIR.mkdir(parents=True, exist_ok=True)
                 filename =  PAGE_DATA_DIR / f"{matched_name}_{index}.png"
