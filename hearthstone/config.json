@@ -1,9 +1,9 @@
 {
     "debug": false,
     "enableSkip": false,
-    "pageNum": 15,
+    "pageNum": 51,
     "test": 308,
-    "#windows": "mac:///?title_re=.*(Hearthstone|炉石传说).*",
-    "windows": "Windows:///?title_re=.*炉石传说.*",
+    "windows": "mac:///?title_re=.*(Hearthstone|炉石传说).*",
+    "#windows": "Windows:///?title_re=.*炉石传说.*",
     "SNAPSHOT_QUALITY": 95
 }
