@@ -34,7 +34,7 @@ class Login(UI):
             firing_time=120,
             logdir=f"./log/{date}/report",
             devices=[
-                "Windows:///?title_re=.*炉石传说.*",
+                self.config.config_data["windows"]
             ],
         )
         logger.info("App started")
@@ -47,7 +47,7 @@ class Login(UI):
         pass
 
 if __name__ == "__main__":
-    config = Config("config_path")
+    config = Config(Path(__file__).with_name("config.json"))
     login = Login(config)
     login.app_start()
     login.run()

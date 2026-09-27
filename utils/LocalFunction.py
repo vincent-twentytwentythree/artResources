@@ -315,15 +315,13 @@ def move(pos: Union[Template, Tuple[int, int]]) -> Tuple[int, int]:
     G.DEVICE.mouse_move(pos)
     return pos
 
-def snapshot(v: Template, filename: str = None):
+def snapshot(v: Template):
     """Capture a template area, optionally saving the cropped image."""
     screen = G.DEVICE.snapshot(filename=None, quality=Config.ST.SNAPSHOT_QUALITY)
     if screen is None:
         logger.warning("Screen is None, may be locked")
         return None
     image = crop(screen, v.area)
-    if filename is not None:
-        aircv.imwrite(filename, image, quality=Config.ST.SNAPSHOT_QUALITY)
     return image
 
 def ocr(v: Template, cls: Type[Ocr] = Ocr, single_line_fallback: bool = False):

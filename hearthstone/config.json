@@ -1,5 +1,8 @@
 {
+    "debug": false,
     "enableSkip": false,
-    "pageNum": 86,
-    "test": 308
+    "pageNum": 2,
+    "test": 308,
+    "windows": "Windows:///?title_re=.*炉石传说.*",
+    "#windows": "MessageWindows:///?title_re=.*炉石传说.*"
 }
