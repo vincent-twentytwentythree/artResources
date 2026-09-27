@@ -184,7 +184,21 @@ class Generate(UI):
             if saved_count == 0:
                 raise RuntimeError(f"No card PNGs saved for page {page_num}; page not advanced")
             time.sleep(0.1)
-            touch(position(emptyRightMiddle))
+            retry = 10
+            while retry > 0:
+                touch(position(emptyRightMiddle))
+                time.sleep(0.1)
+                touch(position(emptyCard2Top))
+                time.sleep(0.1)
+                boxed_results = ocr(card1, single_line_fallback=True) or []
+                if boxed_results == None or len(boxed_results) == 0:
+                    logger.debug(f"{page_num} next page card1 ocr failed")
+                    retry -= 1
+                    continue
+                if previous_page_card1_name not in set([box.text.strip() for box in boxed_results]):
+                    break
+                logger.debug(f"{page_num} next page card1 same as previous page card1 name")
+                retry -= 1
             page_num += 1
             logger.info("next page {}", page_num)
             config_data["pageNum"] = page_num
