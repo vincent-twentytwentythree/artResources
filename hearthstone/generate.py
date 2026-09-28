@@ -50,6 +50,7 @@ class Generate(UI):
             )
         config_data = self.config.config_data
         page_num = config_data.get("pageNum", 0)
+        sleep_time = config_data.get("sleepTime", 0.2)
         enableSkip = config_data.get("enableSkip", True)
         if not isinstance(page_num, int) or isinstance(page_num, bool) or page_num < 0:
             raise ValueError("config.json pageNum must be a non-negative integer")
@@ -74,9 +75,9 @@ class Generate(UI):
         def checkCard(card):
             retry = 10
             while retry > 0:
-                time.sleep(0.1)
+                time.sleep(sleep_time)
                 touch(position(emptyCard2Top))
-                time.sleep(0.1)
+                time.sleep(sleep_time)
                 boxed_results = ocr(card)
                 if boxed_results != None and len(boxed_results) > 0:
                     logger.info("card {}", boxed_results)
@@ -87,9 +88,9 @@ class Generate(UI):
         def card1ZoomOut(default_boxed_results):
             retry = 10
             while retry > 0:
-                time.sleep(0.1)
+                time.sleep(sleep_time)
                 move(position(emptyCard2Top))
-                time.sleep(0.1)
+                time.sleep(sleep_time)
                 boxed_results = ocr(card1, need_crop=False)
                 if boxed_results == None or len(boxed_results) == 0:
                     return True
@@ -104,9 +105,9 @@ class Generate(UI):
             retry = 10
             while retry > 0:
                 retry -= 1
-                time.sleep(0.1)
+                time.sleep(sleep_time)
                 move(position(emptyCard2Top))
-                time.sleep(0.1)
+                time.sleep(sleep_time)
                 for cardNameBox in [cardName, cardName2, cardName3]:
                     boxed_results = ocr(cardNameBox, single_line_fallback=True) or []
                     if boxed_results == None or len(boxed_results) == 0:
@@ -131,14 +132,14 @@ class Generate(UI):
                     raise LoopError('The operation has looped too many times')
                 touch(position(emptyRightMiddle))
                 skip_page -= 1
-                time.sleep(0.1)
+                time.sleep(sleep_time)
 
         loop_timer = Timer(0, 400).start()
         previous_page_card1_name = None
         while True:
             if loop_timer.reached():
                 raise LoopError('The operation has looped too many times')
-            time.sleep(0.1)
+            time.sleep(sleep_time)
             touch(position(emptyCard2Top))
 
             default_boxed_results = set([card.text for card in ocr(card1, single_line_fallback=True) if card.text != None and len(card.text) >= 2 and card.text.isdigit() == False])
@@ -151,7 +152,7 @@ class Generate(UI):
                     logger.debug(f"{page_num}_{index} no data")
                     continue
 
-                time.sleep(0.1)
+                time.sleep(sleep_time)
                 touch(position(card), right_click=True)
 
                 if card1ZoomOut(default_boxed_results) == False:
@@ -179,17 +180,17 @@ class Generate(UI):
                     if image is None or not filename.is_file():
                         raise RuntimeError(f"Could not save card image: {filename}")
                 saved_count += 1
-                time.sleep(0.1)
+                time.sleep(sleep_time)
                 touch(position(emptyCard2Top))
             if saved_count == 0:
                 raise RuntimeError(f"No card PNGs saved for page {page_num}; page not advanced")
-            time.sleep(0.1)
             retry = 10
             while retry > 0:
+                time.sleep(sleep_time)
                 touch(position(emptyRightMiddle))
-                time.sleep(0.1)
+                time.sleep(sleep_time * 3)
                 touch(position(emptyCard2Top))
-                time.sleep(0.1)
+                time.sleep(sleep_time)
                 boxed_results = ocr(card1, single_line_fallback=True) or []
                 if boxed_results == None or len(boxed_results) == 0:
                     logger.debug(f"{page_num} next page card1 ocr failed")
