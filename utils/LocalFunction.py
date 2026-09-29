@@ -83,8 +83,8 @@ def touch(
         w = v.width * v.ratio()  # actual height and width of target in screen
         pos = random_rectangle_point(center_pos, h, w)
     else:
-        if getattr(G.DEVICE, "screen_capture_available", lambda: True)():
-            try_log_screen()
+        # if getattr(G.DEVICE, "screen_capture_available", lambda: True)():
+        #     try_log_screen()
         pos = v
     for _ in range(times):
         G.DEVICE.touch(pos, **kwargs)
@@ -271,7 +271,7 @@ def loop_find(
                     if ocr_result:
                         if v.local_search:
                             match_pos = int((v.area[0] + v.area[2]) / 2), int((v.area[1] + v.area[3]) / 2)
-                            try_log_screen(screen)
+                            # try_log_screen(screen)
                             return match_pos
                         else:
                             for current_ocr_result in ocr_result:
@@ -279,7 +279,7 @@ def loop_find(
                                 match_pos = (int((x1 + x2) / 2), int((y1 + y2) / 2))
                                 if v.rgb and not is_color_similar(v.image, crop(screen, (x1, y1, x2, y2)), 0.5):
                                     continue
-                                try_log_screen(screen)
+                                # try_log_screen(screen)
                                 return match_pos
                 else:
                     match_pos = v.match_in(screen, v.local_search)
@@ -287,7 +287,7 @@ def loop_find(
                         cost_time = time.time() - start_time
                         logger.debug(f"ImgRec <{v.name}> cost {cost_time:.2f}s: {match_pos}")
 
-                        try_log_screen(screen)
+                        # try_log_screen(screen)
                         return match_pos
 
         if interval_func is not None:
@@ -302,7 +302,7 @@ def loop_find(
                 continue
 
             logger.debug(f"<{v.name}> matching failed in {timeout}s")
-            try_log_screen(screen)
+            # try_log_screen(screen)
             raise TargetNotFoundError(f'Picture {v.filepath} not found on screen')
         else:
             time.sleep(interval)
